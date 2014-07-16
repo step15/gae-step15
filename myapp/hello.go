@@ -3,6 +3,7 @@ package hello
 import (
   "fmt"
   "net/http"
+	"strconv"
 )
 
 func init() {
@@ -20,29 +21,40 @@ func recv(w http.ResponseWriter, r *http.Request) {
 	if (len(v)<1) {
 		v = r.FormValue("message")
 	}
-	var k = Atoi(r.FormValue("k"))
+	var k, _ = strconv.Atoi(r.FormValue("k"))
 	if (k < 1) {
 		k = 3
 	}
-	for (int ik = 0; ik < k; ++ik) {
-		for (int i = 0; i < len(v);) {
+	debug, _ := strconv.ParseBool(r.FormValue("debug"))
+	// fmt.Fprintf(w, "k=%d\n", k)
+	for ik := 0; ik < k; ik++ {
+		if (debug) {
+			fmt.Fprintf(w, "%d:", ik);
+		}
+		for i := 0; i < len(v); {
 			if (ik == 0) {
-				fmt.Print(w, v[i]);
+				fmt.Fprint(w, v[i:i+1]);
 				i += (k-1) * 2;
 			} else if (ik > 0 && ik < k-1) { // middle
 				i += ik;
 				if (i < len(v)) {
-					fmt.Fprint(w, v[i]);
+					fmt.Fprint(w, v[i:i+1]);
 				}
-				i += 2 * (k - ik)  // go to bottom and come back
+				i += 2 * (k - ik - 1)  // go to bottom and come back
 				if (i < len(v)) {
-					fmt.Fprint(w, v[i])
+					fmt.Fprint(w, v[i:i+1])
 				}
+				i += ik;  // return to top
 			} else { // bottom
-				i += ik;
-				fmt.Fprint(w, [i]);
-				i += ik;
+				i += ik
+				if (i < len(v)) {
+					fmt.Fprint(w, v[i:i+1])
+				}
+				i += ik
 			}
+		}
+		if (debug) {
+			fmt.Fprint(w, "\n");
 		}
 	}
 }
