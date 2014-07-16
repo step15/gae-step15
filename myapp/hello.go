@@ -4,6 +4,7 @@ import (
   "fmt"
   "net/http"
 	"strconv"
+	"strings"
 )
 
 func init() {
@@ -17,10 +18,11 @@ func root(w http.ResponseWriter, r *http.Request) {
 }
 
 func recv(w http.ResponseWriter, r *http.Request) {
-	var v = r.FormValue("content")
-	if (len(v)<1) {
-		v = r.FormValue("message")
+	var vs = r.FormValue("content")
+	if (len(vs)<1) {
+		vs = r.FormValue("message")
 	}
+	v := strings.Split(vs, "")
 	var k, _ = strconv.Atoi(r.FormValue("k"))
 	if (k < 1) {
 		k = 3
@@ -33,22 +35,22 @@ func recv(w http.ResponseWriter, r *http.Request) {
 		}
 		for i := 0; i < len(v); {
 			if (ik == 0) {
-				fmt.Fprint(w, v[i:i+1]);
+				fmt.Fprint(w, v[i]);
 				i += (k-1) * 2;
 			} else if (ik > 0 && ik < k-1) { // middle
 				i += ik;
 				if (i < len(v)) {
-					fmt.Fprint(w, v[i:i+1]);
+					fmt.Fprint(w, v[i]);
 				}
 				i += 2 * (k - ik - 1)  // go to bottom and come back
 				if (i < len(v)) {
-					fmt.Fprint(w, v[i:i+1])
+					fmt.Fprint(w, v[i])
 				}
 				i += ik;  // return to top
 			} else { // bottom
 				i += ik
 				if (i < len(v)) {
-					fmt.Fprint(w, v[i:i+1])
+					fmt.Fprint(w, v[i])
 				}
 				i += ik
 			}
