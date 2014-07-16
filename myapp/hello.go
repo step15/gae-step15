@@ -6,9 +6,14 @@ import (
 )
 
 func init() {
-    http.HandleFunc("/", handler)
+    http.HandleFunc("/", root)
+    http.HandleFunc("/recv", recv)
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func root(w http.ResponseWriter, r *http.Request) {
     fmt.Fprint(w, "Hello, world!")
+}
+
+func recv(w http.ResponseWriter, r *http.Request) {
+     fmt.Fprint(w, r.FormValue("content"));
 }
