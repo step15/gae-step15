@@ -30,6 +30,7 @@ func root(w http.ResponseWriter, r *http.Request) {
 }
 
 func recv(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
 	var vs = r.FormValue("content")
 	if (len(vs)<1) {
 		vs = r.FormValue("message")
@@ -74,6 +75,7 @@ func recv(w http.ResponseWriter, r *http.Request) {
 }
 
 func peers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
 	fmt.Fprint(w, strings.Join(kPeers, "\n"))
 }
 
@@ -81,6 +83,7 @@ func send(w http.ResponseWriter, r *http.Request) {
   c := appengine.NewContext(r)
   client := urlfetch.Client(c)
 	vs := r.FormValue("message")
+	w.Header().Set("Content-Type", "text/plain")
 	for i := range kPeers {
 		v := url.Values{}
 		v.Set("message", vs)
