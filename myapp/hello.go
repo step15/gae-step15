@@ -5,7 +5,8 @@ import (
   "net/http"
 	"strconv"
 	"strings"
-//	"appengine"
+	"appengine"
+	"appengine/urlfetch"
 )
 
 func init() {
@@ -68,4 +69,15 @@ func recv(w http.ResponseWriter, r *http.Request) {
 
 func peers(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, strings.Join(kPeers, "\n"))
+}
+
+func send(w http.ResponseWriter, r *http.Request) {
+  c := appengine.NewContext(r)
+  client := urlfetch.Client(c)
+	for peer := range kPeers {
+		resp, err := client.Get("http://www.google.com/")
+		if (err == nil) {
+			fmt.Fprintln(w, resp)
+		}
+	}
 }
