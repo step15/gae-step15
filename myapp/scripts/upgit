@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if ! grep -q -s wheezy-backports /etc/apt/sources.list; then
+  sudo "echo deb http://ftp.jp.debian.org/debian wheezy-backports main contrib non-free >> /etc/apt/sources.list"
+  sudo aptitude update
+fi
+
+sudo aptitude install -t wheezy-backports git gitk
