@@ -8,6 +8,7 @@ import (
 	"appengine"
 	"appengine/urlfetch"
 	"net/url"
+	"io/ioutil"
 )
 
 func init() {
@@ -18,7 +19,9 @@ func init() {
 	http.HandleFunc("/send", send)
 }
 
-var kPeers = []string {"http://step-test-krispop.appspot.com", "http://1-dot-step-hnoda.appspot.com"}
+var kPeers = []string {
+	"http://1-dot-step-homework-hnoda.appspot.com/stephomeworkhnoda",
+	"http://step-test-krispop.appspot.com"}
 
 
 func root(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +86,8 @@ func send(w http.ResponseWriter, r *http.Request) {
 		url := fmt.Sprintf("%s/convert?%s", kPeers[i], v.Encode())
 		resp, err := client.Get(url)
 		if (err == nil) {
-			fmt.Fprintln(w, resp)
+			body, _ := ioutil.ReadAll(resp.Body)
+			fmt.Fprintf(w, "%s\n", body)
 		} else {
 			c.Infof("Error sending to %s => %s", url, err)
 		}
