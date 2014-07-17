@@ -17,6 +17,7 @@ func init() {
   http.HandleFunc("/convert", recv)
 	http.HandleFunc("/peers", peers)
 	http.HandleFunc("/send", send)
+	http.HandleFunc("/show", send)
 }
 
 var kPeers = []string {
