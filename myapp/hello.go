@@ -7,6 +7,7 @@ import (
 	"strings"
 	"appengine"
 	"appengine/urlfetch"
+	"net/url"
 )
 
 func init() {
@@ -14,6 +15,7 @@ func init() {
   http.HandleFunc("/recv", recv)
   http.HandleFunc("/convert", recv)
 	http.HandleFunc("/peers", peers)
+	http.HandleFunc("/send", send)
 }
 
 var kPeers = []string {"http://step-test-krispop.appspot.com", "http://1-dot-step-hnoda.appspot.com"}
@@ -74,10 +76,16 @@ func peers(w http.ResponseWriter, r *http.Request) {
 func send(w http.ResponseWriter, r *http.Request) {
   c := appengine.NewContext(r)
   client := urlfetch.Client(c)
-	for peer := range kPeers {
-		resp, err := client.Get("http://www.google.com/")
+	vs := r.FormValue("message")
+	for i := range kPeers {
+		v := url.Values{}
+		v.Set("message", vs)
+		url := fmt.Sprintf("%s/convert?%s", kPeers[i], v.Encode())
+		resp, err := client.Get(url)
 		if (err == nil) {
 			fmt.Fprintln(w, resp)
+		} else {
+			c.Infof("Error sending to %s => %s", url, err)
 		}
 	}
 }

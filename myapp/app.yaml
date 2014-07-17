@@ -3,12 +3,13 @@ version: 1
 runtime: go
 api_version: go1
 
+handlers:
 - url: /scripts
   static_dir: scripts
 
 - url: /upgit
   static_files: scripts/upgit
-  upload: scripts/.*
+  upload: scripts/upgit
 
 - url: /.*
   script: _go_app
