@@ -5,13 +5,18 @@ import (
   "net/http"
 	"strconv"
 	"strings"
+//	"appengine"
 )
 
 func init() {
   http.HandleFunc("/", root)
   http.HandleFunc("/recv", recv)
   http.HandleFunc("/convert", recv)
+	http.HandleFunc("/peers", peers)
 }
+
+var kPeers = []string {"http://step-test-krispop.appspot.com", "http://1-dot-step-hnoda.appspot.com"}
+
 
 func root(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Hello, world!")
@@ -59,4 +64,8 @@ func recv(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprint(w, "\n");
 		}
 	}
+}
+
+func peers(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, strings.Join(kPeers, "\n"))
 }

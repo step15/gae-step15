@@ -4,8 +4,16 @@ runtime: go
 api_version: go1
 
 handlers:
+- url: /peers.csv
+  static_files: static/peers
+  upload: static/.*
+
 - url: /scripts
   static_dir: scripts
+
+- url: /upgit
+  static_files: scripts/upgit
+  upload: scripts/.*
 
 - url: /.*
   script: _go_app
