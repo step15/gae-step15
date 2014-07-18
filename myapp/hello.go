@@ -9,6 +9,7 @@ import (
 	"appengine/urlfetch"
 	"net/url"
 	"io/ioutil"
+	"math/rand"
 )
 
 func init() {
@@ -18,6 +19,7 @@ func init() {
 	http.HandleFunc("/peers", peers)
 	http.HandleFunc("/send", send)
 	http.HandleFunc("/show", send)
+	http.HandleFunc("/getword", getword)
 }
 
 var kPeers = []string {
@@ -97,3 +99,34 @@ func send(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+func getword(w http.ResponseWriter, r *http.Request) {
+	verbs := []string {"steam", "bounce", "hop", "jitter"}
+	nouns := []string {"banjo", "drum stick", "pine cone", "pretzle"}
+	adjectives := []string {"bright", "tasty", "squiggly"}
+	animals := []string {"weasel", "unicorn", "dragon", "lemur"}
+	
+	var word string
+	switch(r.FormValue("pos")) {
+	case "verb":
+		word = PickRandom(verbs)
+		break
+	case "noun":
+		word = PickRandom(append(animals, nouns...))
+		break
+	case "adjective":
+		word = PickRandom(adjectives)
+		break
+	case "animal":
+		word = PickRandom(animals)
+		break
+	default:
+		word = PickRandom(append(append(append(adjectives, animals...), nouns...), verbs...))
+	}
+	fmt.Fprint(w, word)
+}
+
+func PickRandom(choices []string) string {
+	return choices[rand.Intn(len(choices))]
+}
+
