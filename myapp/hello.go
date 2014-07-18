@@ -108,7 +108,6 @@ func recv(w http.ResponseWriter, r *http.Request) {
 
 func peers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-  c := appengine.NewContext(r)
 	ep := r.FormValue("endpoint")
 	if (ep == "") {
 		ep = "convert"
