@@ -109,9 +109,6 @@ func recv(w http.ResponseWriter, r *http.Request) {
 func peers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
   c := appengine.NewContext(r)
-//	c.Infof("peermap: %s", peerMap)
-	c.Infof("peersServing: %s", peersServing)
-	c.Infof("arrr %s", initPeers())
 	ep := r.FormValue("endpoint")
 	if (ep == "") {
 		ep = "convert"
