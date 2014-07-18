@@ -83,20 +83,32 @@ func peers(w http.ResponseWriter, r *http.Request) {
 
 func send(w http.ResponseWriter, r *http.Request) {
   c := appengine.NewContext(r)
-  client := urlfetch.Client(c)
 	vs := r.FormValue("message")
 	w.Header().Set("Content-Type", "text/plain")
+
+	cs := make(chan string, len(kPeers))
 	for i := range kPeers {
 		v := url.Values{}
 		v.Set("message", vs)
 		url := fmt.Sprintf("%s/convert?%s", kPeers[i], v.Encode())
-		resp, err := client.Get(url)
-		if (err == nil) {
-			body, _ := ioutil.ReadAll(resp.Body)
-			fmt.Fprintf(w, "%s\n", body)
-		} else {
-			c.Infof("Error sending to %s => %s", url, err)
-		}
+		go FetchUrl(url, c, cs)
+	}
+	
+	for i := range kPeers {
+		fmt.Fprintf(w, "%s\n", <-cs)
+		i++
+	}
+}
+
+func FetchUrl(url string, c appengine.Context, cs chan string) {
+  client := urlfetch.Client(c)
+	resp, err := client.Get(url)
+	if (err == nil) {
+		body, _ := ioutil.ReadAll(resp.Body)
+		cs <- fmt.Sprintf("%s => %s", url, string(body))
+	} else {
+		c.Infof("Error fetching %s => %s", url, err)
+		cs <- fmt.Sprintf("[Error: %s]")
 	}
 }
 
