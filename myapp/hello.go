@@ -12,6 +12,18 @@ import (
 	"math/rand"
 )
 
+var kPeers = []string {
+	"http://step-homework-hnoda.appspot.com/",
+	"http://step-test-krispop.appspot.com"}
+
+var kMadlibPeers = []string {
+	"http://step-test-krispop.appspot.com"}
+
+const kPeersSource = `http://step-homework-hnoda.appspot.com/ T T F F F
+http://step-test-krispop.appspot.com/ T T T T T`
+
+var peersServing = initPeers()
+
 func init() {
   http.HandleFunc("/", root)
   http.HandleFunc("/recv", recv)
@@ -23,12 +35,27 @@ func init() {
 	http.HandleFunc("/madlib", madlib)
 }
 
-var kPeers = []string {
-	"http://step-homework-hnoda.appspot.com/",
-	"http://step-test-krispop.appspot.com"}
-
-var kMadlibPeers = []string {
-	"http://step-test-krispop.appspot.com"}
+func initPeers() map[string][]string {
+	rMap := make(map[string][]string)
+	fields := []string {"url", "convert", "show", "peers", "getword", "madlib"}
+	lines := strings.Split(kPeersSource, "\n")
+	for li := range(lines) {
+		v := strings.Split(lines[li], " ")
+//		rMap[lines[li]] = []string {strings.Join(v, ";"),fmt.Sprintf("%d %d", len(v), len(fields))}
+		if (len(v) < len(fields)) {
+			continue
+		}
+		url := v[0]
+		for fi := 1; fi < len(fields); fi++ {
+			val, _ := strconv.ParseBool(v[fi])
+//			peerMap[url][fields[fi]] = val
+			if (val) {
+				rMap[fields[fi]] = append(rMap[fields[fi]], url)
+			}
+		}
+	}
+	return rMap
+}
 
 func root(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Hello, world!")
@@ -81,7 +108,16 @@ func recv(w http.ResponseWriter, r *http.Request) {
 
 func peers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	fmt.Fprint(w, strings.Join(kPeers, "\n"))
+  c := appengine.NewContext(r)
+//	c.Infof("peermap: %s", peerMap)
+	c.Infof("peersServing: %s", peersServing)
+	c.Infof("arrr %s", initPeers())
+	ep := r.FormValue("endpoint")
+	if (ep == "") {
+		ep = "convert"
+	}
+	fmt.Fprint(w, strings.Join(peersServing[ep], "\n"))
+	
 }
 
 func send(w http.ResponseWriter, r *http.Request) {
