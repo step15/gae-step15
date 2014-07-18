@@ -12,13 +12,6 @@ import (
   "math/rand"
 )
 
-var kPeers = []string {
-  "http://step-homework-hnoda.appspot.com/",
-  "http://step-test-krispop.appspot.com"}
-
-var kMadlibPeers = []string {
-  "http://step-test-krispop.appspot.com"}
-
 const kPeersSource = `http://step-homework-hnoda.appspot.com/ T T F F F
 http://step-test-krispop.appspot.com/ T T T T T`
 
@@ -120,6 +113,7 @@ func send(w http.ResponseWriter, r *http.Request) {
   c := appengine.NewContext(r)
   vs := r.FormValue("message")
   w.Header().Set("Content-Type", "text/plain")
+	kPeers := peersServing["convert"]
 
   cs := make(chan string, len(kPeers))
   for i := range kPeers {
@@ -193,7 +187,8 @@ func PickRandom(choices []string) string {
 }
 
 func GetRandomWord(pos string, c appengine.Context) chan string {
-  url := fmt.Sprintf("%s/getword?pos=%s", PickRandom(kMadlibPeers), pos)
+	kPeers := peersServing["getword"]
+  url := fmt.Sprintf("%s/getword?pos=%s", PickRandom(kPeers), pos)
   cs := make(chan string, 1)
   FetchUrl(url, c, cs)
   return cs
