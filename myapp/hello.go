@@ -121,10 +121,12 @@ func FetchUrl(url string, c appengine.Context, cs chan string) {
 
 func getword(w http.ResponseWriter, r *http.Request) {
 	verbs := []string {"steam", "bounce", "hop", "jitter"}
-	nouns := []string {"banjo", "drum stick", "pine cone", "pretzle"}
-	adjectives := []string {"bright", "tasty", "squiggly"}
+	nouns := []string {"wand", "banjo", "drum stick", "pine cone", "pretzle"}
+	adjectives := []string {"bright", "tasty", "squiggly", "quixotic"}
 	animals := []string {"weasel", "unicorn", "dragon", "lemur"}
 	names := []string {"Boris", "Shiina", "Chrono", "Hermione"}
+	adverbs := []string {"furiously", "lazily", "methodically"}
+	exclaimations := []string {"Expelliramus", "Lumos", "Expecto patronum", "Wingadium leviosa"}
 	
 	var word string
 	switch(r.FormValue("pos")) {
@@ -132,7 +134,7 @@ func getword(w http.ResponseWriter, r *http.Request) {
 		word = PickRandom(verbs)
 		break
 	case "noun":
-		word = PickRandom(append(animals, nouns...))
+		word = PickRandom(nouns)
 		break
 	case "adjective":
 		word = PickRandom(adjectives)
@@ -143,8 +145,13 @@ func getword(w http.ResponseWriter, r *http.Request) {
 	case "name":
 		word = PickRandom(names)
 		break
+	case "exclaimation":
+		word = PickRandom(exclaimations)
+		break
+	case "adverb":
+		word = PickRandom(adverbs)
 	default:
-		word = PickRandom(append(append(append(adjectives, animals...), nouns...), verbs...))
+		word = PickRandom(append(append(append(append(append(adverbs, exclaimations...), adjectives...), animals...), nouns...), verbs...))
 	}
 	fmt.Fprint(w, word)
 }
@@ -165,7 +172,14 @@ func madlib(w http.ResponseWriter, r *http.Request) {
 	gw := func(pos string) chan string {return GetRandomWord(pos, c)}
 	w.Header().Set("Content-Type", "text/plain")
 	res := ""
-	switch (rand.Intn(3)) {
+	n := -1
+	if (r.FormValue("n")!="") {
+		n, _ = strconv.Atoi(r.FormValue("n"))
+	}
+	if (n < 0 || n > 3) {
+		n = rand.Intn(4)
+	}
+	switch (n) {
 	case 0:
 		ws := []chan string {gw(""), gw("adjective"), gw("animal"), gw("noun"), gw("adjective")}
 		res = fmt.Sprintf(`The mayor of %s-Town was a %s %s. One day the mayor ate a %s and said it was very %s!`, <-ws[0], <-ws[1], <-ws[2], <-ws[3], <-ws[4]);
@@ -177,6 +191,10 @@ func madlib(w http.ResponseWriter, r *http.Request) {
 	case 2:
 		ws := []chan string {gw("noun"), gw("name"), gw("noun"), gw("animal")}
 		res = fmt.Sprintf(`"Now where did I put my %s...?" said %s, while moving the %s before it was eaten by the wild %s.`, <-ws[0], <-ws[1], <-ws[2], <-ws[3])
+		break
+	case 3:
+		ws := []chan string {gw("exclaimation"), gw("name"), gw("adverb"), gw("noun"), gw("adjective"), gw("animal")}
+		res = fmt.Sprintf(`"%s!" shouted %s %s, waving her %s at the %s %s.`, <-ws[0], <-ws[1], <-ws[2], <-ws[3], <-ws[4], <-ws[5])
 		break
 	default:
 		panic("Impossible")
