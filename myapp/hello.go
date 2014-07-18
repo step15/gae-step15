@@ -24,7 +24,7 @@ func init() {
 }
 
 var kPeers = []string {
-	"http://1-dot-step-homework-hnoda.appspot.com/stephomeworkhnoda",
+	"http://step-homework-hnoda.appspot.com/",
 	"http://step-test-krispop.appspot.com"}
 
 var kMadlibPeers = []string {
