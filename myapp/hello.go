@@ -124,7 +124,7 @@ func getword(w http.ResponseWriter, r *http.Request) {
 	nouns := []string {"wand", "banjo", "drum stick", "pine cone", "pretzle"}
 	adjectives := []string {"bright", "tasty", "squiggly", "quixotic"}
 	animals := []string {"weasel", "unicorn", "dragon", "lemur"}
-	names := []string {"Boris", "Shiina", "Chrono", "Hermione"}
+	names := []string {"Dexter", "Shiina", "Chrono", "Hermione"}
 	adverbs := []string {"furiously", "lazily", "methodically"}
 	exclaimations := []string {"Expelliramus", "Lumos", "Expecto patronum", "Wingadium leviosa"}
 	
