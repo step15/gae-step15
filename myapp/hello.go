@@ -109,10 +109,10 @@ func FetchUrl(url string, c appengine.Context, cs chan string) {
 	resp, err := client.Get(url)
 	if (err == nil) {
 		body, _ := ioutil.ReadAll(resp.Body)
-		c.Infof("Success getting URL: %s", url)
+//		c.Infof("Success getting URL: %s", url)
 //		cs <- fmt.Sprintf("%s => %s", url, string(body))
 		cs <- string(body)
-		c.Infof("Passed channel inject for %s", url)
+//		c.Infof("Passed channel inject for %s", url)
 	} else {
 		c.Infof("Error fetching %s => %s", url, err)
 		cs <- fmt.Sprintf("[Error: %s]")
