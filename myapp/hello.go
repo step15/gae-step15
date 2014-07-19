@@ -85,7 +85,23 @@ func initPeers(c appengine.Context) map[string][]string {
 }
 
 func root(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Hello, world!")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprint(w, `
+<head>
+<title>STEP HW7 Example Server</title>
+</head>
+<body>
+		Try these example links:
+<ul>
+		<li><a href="/convert?message=DoAndroidsDreamOfElectricSheep?">/convert?message=DoAndroidsDreamOfElectricSheep?</a>
+    <li><a href="/show?message=RailFenceCipher">/show?message=RailFenceCipher</a>
+								 <li><a href="/peers">/peers</a> (these servers provide /convert)
+								 <li><a href="/peers?endpoint=getword">/peers?endpoint=getword</a> (these servers provide /getword and can be used for generating madlibs)
+	<li><a href="/getword?pos=animal">/getword?pos=animal</a> (My server supports these parts of speech (pos): verb, noun, adjective, animal, name, adverb, exclaimation. You can implement whatever pos you want. If you get a request for an unsupported pos, just return a random word)
+								 <li><a href="/madlib">/madlib</a> (Generates a random madlib)
+</ul>
+</body>
+		`)
 }
 
 func AddHeaders(w *http.ResponseWriter) {
