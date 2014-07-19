@@ -56,6 +56,10 @@ type FetchRes struct {
 	url, res string
 }
 
+type StringStruct struct {
+	s string
+}
+
 func initPeers(c appengine.Context) map[string][]string {
 	rMap := make(map[string][]string)
 	fields := []string{"url", "convert", "show", "getword", "madlib", "peers"}
@@ -275,8 +279,10 @@ func madlib(w http.ResponseWriter, r *http.Request) {
 }
 
 func StorePeers(c appengine.Context, s string) {
+	ss := new(StringStruct)
+	ss.s = s
 	key := datastore.NewKey(c, kPeerStoreKind, kPeerStoreId, 0, nil)
-	_, err := datastore.Put(c, key, s)
+	_, err := datastore.Put(c, key, ss)
 	if (err != nil) {
 		panic(err)
 	}
@@ -313,11 +319,13 @@ func GetPeers(c appengine.Context) string {
 	if (s != "") {
 		return s
 	}
+	ss := new(StringStruct)
 	key := datastore.NewKey(c, kPeerStoreKind, kPeerStoreId, 0, nil)
-	err := datastore.Get(c, key, &s)
+	err := datastore.Get(c, key, ss)
 	if (err != nil) {
 		c.Errorf("Error reading from datastore %s", err)
 	}
+	s = ss.s
 	if (s == "") {
 		s = kPeerSourceStatic
 		c.Warningf("Datastore read failed. Using static peers")
