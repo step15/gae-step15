@@ -194,11 +194,12 @@ func FetchUrl(url string, c appengine.Context, cf chan FetchRes) {
 	var r FetchRes
 	r.url = url
 	if err == nil {
-		//    c.Infof("Success getting URL: %s", url)
-		//    cs <- fmt.Sprintf("%s => %s", url, string(body))
 		body, _ := ioutil.ReadAll(resp.Body)
 		r.res = string(body)
-		//    c.Infof("Passed channel inject for %s", url)
+		if (resp.StatusCode != 200) {
+			r.res = fmt.Sprintf("[Failure (%s): %s]", resp.Status, r.res)
+		}
+//		c.Infof("Success getting URL: %s => %s", url, r.res)
 	} else {
 		c.Warningf("Error fetching %s => %s", url, err)
 		r.res = fmt.Sprintf("[Error: %s]", err)
