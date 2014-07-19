@@ -14,7 +14,7 @@ import (
 	"log"
 )
 
-const kPeersSource = `http://step-homework-hnoda.appspot.com/	T	T	F	F	F
+var kPeersSource = `http://step-homework-hnoda.appspot.com/	T	T	F	F	F
 http://step-test-krispop.appspot.com/	T	T	T	T	T
 http://ivory-haven-645.appspot.com					
 http://1-dot-alert-imprint-645.appspot.com/					
@@ -42,13 +42,20 @@ func init() {
 	http.HandleFunc("/show", send)
 	http.HandleFunc("/getword", getword)
 	http.HandleFunc("/madlib", madlib)
+	http.HandleFunc("/update-peers", updatePeers)
 }
 
 var peerSplitRe = regexp.MustCompile(`\s+`)
+var	trailingSlashRe = regexp.MustCompile("/$")
+var appspotPrefixRe = regexp.MustCompile(`\.appspot.com.*`)
+
+type FetchRes struct {
+	url, res string
+}
 
 func initPeers() map[string][]string {
 	rMap := make(map[string][]string)
-	fields := []string{"url", "convert", "show", "peers", "getword", "madlib"}
+	fields := []string{"url", "convert", "show", "getword", "madlib", "peers"}
 	lines := strings.Split(kPeersSource, "\n")
 	for li := range lines {
 		v := peerSplitRe.Split(lines[li], len(fields))
@@ -57,7 +64,7 @@ func initPeers() map[string][]string {
 			v = append(v, "F")
 		}
 //		log.Printf("Got %s", strings.Join(v, ";"))
-		url := v[0]
+		url := trailingSlashRe.ReplaceAllString(v[0], "")
 		for fi := 1; fi < len(fields); fi++ {
 			val, _ := strconv.ParseBool(v[fi])
 			//      peerMap[url][fields[fi]] = val
@@ -74,8 +81,12 @@ func root(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Hello, world!")
 }
 
+func AddHeaders(w *http.ResponseWriter) {
+	(*w).Header().Set("Content-Type", "text/plain; charset=utf-8")
+}
+
 func recv(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	AddHeaders(&w)
 	var vs = r.FormValue("content")
 	if len(vs) < 1 {
 		vs = r.FormValue("message")
@@ -120,7 +131,7 @@ func recv(w http.ResponseWriter, r *http.Request) {
 }
 
 func peers(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain")
+	AddHeaders(&w)
 	ep := r.FormValue("endpoint")
 	if ep == "" {
 		ep = "convert"
@@ -132,37 +143,42 @@ func peers(w http.ResponseWriter, r *http.Request) {
 func send(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	vs := r.FormValue("message")
-	w.Header().Set("Content-Type", "text/plain")
+	AddHeaders(&w)
 	kPeers := peersServing["convert"]
 
-	cs := make(chan string, len(kPeers))
+	cf := make(chan FetchRes, len(kPeers))
 	for i := range kPeers {
 		v := url.Values{}
 		v.Set("message", vs)
 		url := fmt.Sprintf("%s/convert?%s", kPeers[i], v.Encode())
-		go FetchUrl(url, c, cs)
+		go FetchUrl(url, c, cf)
 	}
 
 	for i := range kPeers {
-		fmt.Fprintf(w, "%s\n", <-cs)
+		res := <- cf
+		showUrl := appspotPrefixRe.ReplaceAllString(res.url, "...")
+		fmt.Fprintf(w, "%s => %s\n", showUrl, res.res)
 		i++
 	}
 }
 
-func FetchUrl(url string, c appengine.Context, cs chan string) {
+func FetchUrl(url string, c appengine.Context, cf chan FetchRes) {
 	client := urlfetch.Client(c)
 	c.Infof("Fetching URL: %s", url)
 	resp, err := client.Get(url)
+	var r FetchRes
+	r.url = url
 	if err == nil {
 		body, _ := ioutil.ReadAll(resp.Body)
 		//    c.Infof("Success getting URL: %s", url)
 		//    cs <- fmt.Sprintf("%s => %s", url, string(body))
-		cs <- string(body)
+		r.res = string(body)
 		//    c.Infof("Passed channel inject for %s", url)
 	} else {
 		c.Infof("Error fetching %s => %s", url, err)
-		cs <- fmt.Sprintf("[Error: %s]")
+		r.res = fmt.Sprintf("[Error: %s]")
 	}
+	cf <- r
 }
 
 func getword(w http.ResponseWriter, r *http.Request) {
@@ -210,14 +226,19 @@ func GetRandomWord(pos string, c appengine.Context) chan string {
 	kPeers := peersServing["getword"]
 	url := fmt.Sprintf("%s/getword?pos=%s", PickRandom(kPeers), pos)
 	cs := make(chan string, 1)
-	FetchUrl(url, c, cs)
+	go func() {
+		cf := make(chan FetchRes, 1)
+		FetchUrl(url, c, cf)
+		p := <- cf
+		cs <- p.res
+	}()
 	return cs
 }
 
 func madlib(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	gw := func(pos string) chan string { return GetRandomWord(pos, c) }
-	w.Header().Set("Content-Type", "text/plain")
+	AddHeaders(&w)
 	res := ""
 	n := -1
 	if r.FormValue("n") != "" {
@@ -247,4 +268,12 @@ func madlib(w http.ResponseWriter, r *http.Request) {
 		panic("Impossible")
 	}
 	fmt.Fprint(w, res)
+}
+
+func updatePeers(w http.ResponseWriter, r *http.Request) {
+	content, _ := ioutil.ReadAll(r.Body)
+	c := appengine.NewContext(r)
+	c.Infof("Got new update: %s", content)
+	AddHeaders(&w)
+	fmt.Fprint(w, "Updated")
 }
