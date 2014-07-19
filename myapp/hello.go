@@ -10,10 +10,26 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"regexp"
+	"log"
 )
 
-const kPeersSource = `http://step-homework-hnoda.appspot.com/ T T F F F
-http://step-test-krispop.appspot.com/ T T T T T`
+const kPeersSource = `http://step-homework-hnoda.appspot.com/	T	T	F	F	F
+http://step-test-krispop.appspot.com/	T	T	T	T	T
+http://ivory-haven-645.appspot.com					
+http://1-dot-alert-imprint-645.appspot.com/					
+http://ceremonial-tea-645.appspot.com/					
+http://second-strand-645.appspot.com/					
+http://1-dot-nyatagi.appspot.com/hw6					
+http://1-dot-kaisuke5-roy7.appspot.com/hw7					
+http://1-dot-s1200029.appspot.com/testproject					
+http://yuki-stephw7.appspot.com/	T	T	F	F	F
+http://1-dot-anmi0513.appspot.com/myapp					
+http://1-dot-stephomework7.appspot.com/homework7					
+http://1-dot-stepnaomaki.appspot.com/stepweek7					
+http://step-homework-fumiko.appspot.com/webappforstep					
+http://1-dot-teeeest0701.appspot.com/teeeest0701					
+http://1-dot-step-homework-kitade.appspot.com/	T	T	F	F	T`
 
 var peersServing = initPeers()
 
@@ -28,16 +44,19 @@ func init() {
 	http.HandleFunc("/madlib", madlib)
 }
 
+var peerSplitRe = regexp.MustCompile(`\s+`)
+
 func initPeers() map[string][]string {
 	rMap := make(map[string][]string)
 	fields := []string{"url", "convert", "show", "peers", "getword", "madlib"}
 	lines := strings.Split(kPeersSource, "\n")
 	for li := range lines {
-		v := strings.Split(lines[li], " ")
+		v := peerSplitRe.Split(lines[li], len(fields))
 		//    rMap[lines[li]] = []string {strings.Join(v, ";"),fmt.Sprintf("%d %d", len(v), len(fields))}
-		if len(v) < len(fields) {
-			continue
+		for len(v) < len(fields) {
+			v = append(v, "F")
 		}
+//		log.Printf("Got %s", strings.Join(v, ";"))
 		url := v[0]
 		for fi := 1; fi < len(fields); fi++ {
 			val, _ := strconv.ParseBool(v[fi])
@@ -47,6 +66,7 @@ func initPeers() map[string][]string {
 			}
 		}
 	}
+	log.Printf("Peers map: %s", rMap)
 	return rMap
 }
 
