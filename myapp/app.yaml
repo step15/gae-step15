@@ -5,10 +5,12 @@ api_version: go1
 
 handlers:
 - url: /scripts
+  mime_type: text/plain
   static_dir: scripts
 
 - url: /upgit
   static_files: scripts/upgit
+  mime_type: text/plain
   upload: scripts/upgit
 
 - url: /favicon.ico
