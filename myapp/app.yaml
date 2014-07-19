@@ -11,5 +11,11 @@ handlers:
   static_files: scripts/upgit
   upload: scripts/upgit
 
+- url: /favicon.ico
+  static_files: ico/favicon.gif
+  mime_type: image/gif
+  upload: ico/favicon.gif
+
 - url: /.*
   script: _go_app
+
