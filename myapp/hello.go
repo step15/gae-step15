@@ -181,7 +181,8 @@ func send(w http.ResponseWriter, r *http.Request) {
 	for i := range kPeers {
 		res := <- cf
 		showUrl := appspotPrefixRe.ReplaceAllString(res.url, "...")
-		fmt.Fprintf(w, "%s => %s\n", showUrl, res.res)
+		showRes := strings.Replace(strings.TrimSpace(res.res), "\n", " ↓ ", -1)
+		fmt.Fprintf(w, "%s => %s\n", showUrl, showRes)
 		i++
 	}
 }
@@ -193,14 +194,14 @@ func FetchUrl(url string, c appengine.Context, cf chan FetchRes) {
 	var r FetchRes
 	r.url = url
 	if err == nil {
-		body, _ := ioutil.ReadAll(resp.Body)
 		//    c.Infof("Success getting URL: %s", url)
 		//    cs <- fmt.Sprintf("%s => %s", url, string(body))
+		body, _ := ioutil.ReadAll(resp.Body)
 		r.res = string(body)
 		//    c.Infof("Passed channel inject for %s", url)
 	} else {
-		c.Infof("Error fetching %s => %s", url, err)
-		r.res = fmt.Sprintf("[Error: %s]")
+		c.Warningf("Error fetching %s => %s", url, err)
+		r.res = fmt.Sprintf("[Error: %s]", err)
 	}
 	cf <- r
 }
@@ -360,6 +361,12 @@ func updatePeers(w http.ResponseWriter, r *http.Request) {
 	if (len(content) > 9000) {
 		c.Errorf("Update peer request! It's over 9000! Rejectzored!")
 		fmt.Fprint(w, "Too long. Rejectzored.")
+		return
+	}
+
+	old := GetPeersCached(c)
+	if (old == content) {
+		fmt.Fprint(w, "Same as existing. Ignored.")
 		return
 	}
 
