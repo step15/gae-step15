@@ -12,9 +12,14 @@ import (
 	"strings"
 	"regexp"
 	"log"
+	"appengine/datastore"
+	"appengine/memcache"
 )
 
-var kPeersSource = `http://step-homework-hnoda.appspot.com/	T	T	F	F	F
+const kPeerStoreKind = "peerSouce"
+const kPeerStoreId = "current"
+
+const kPeerSourceStatic = `http://step-homework-hnoda.appspot.com/	T	T	F	F	F
 http://step-test-krispop.appspot.com/	T	T	T	T	T
 http://ivory-haven-645.appspot.com					
 http://1-dot-alert-imprint-645.appspot.com/					
@@ -31,8 +36,6 @@ http://step-homework-fumiko.appspot.com/webappforstep
 http://1-dot-teeeest0701.appspot.com/teeeest0701					
 http://1-dot-step-homework-kitade.appspot.com/	T	T	F	F	T`
 
-var peersServing = initPeers()
-
 func init() {
 	http.HandleFunc("/", root)
 	http.HandleFunc("/recv", recv)
@@ -45,7 +48,7 @@ func init() {
 	http.HandleFunc("/update-peers", updatePeers)
 }
 
-var peerSplitRe = regexp.MustCompile(`\s+`)
+var peerSplitRe = regexp.MustCompile(`\t`)
 var	trailingSlashRe = regexp.MustCompile("/$")
 var appspotPrefixRe = regexp.MustCompile(`\.appspot.com.*`)
 
@@ -53,10 +56,10 @@ type FetchRes struct {
 	url, res string
 }
 
-func initPeers() map[string][]string {
+func initPeers(c appengine.Context) map[string][]string {
 	rMap := make(map[string][]string)
 	fields := []string{"url", "convert", "show", "getword", "madlib", "peers"}
-	lines := strings.Split(kPeersSource, "\n")
+	lines := strings.Split(GetPeers(c), "\n")
 	for li := range lines {
 		v := peerSplitRe.Split(lines[li], len(fields))
 		//    rMap[lines[li]] = []string {strings.Join(v, ";"),fmt.Sprintf("%d %d", len(v), len(fields))}
@@ -131,20 +134,21 @@ func recv(w http.ResponseWriter, r *http.Request) {
 }
 
 func peers(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
 	AddHeaders(&w)
 	ep := r.FormValue("endpoint")
 	if ep == "" {
 		ep = "convert"
 	}
-	fmt.Fprint(w, strings.Join(peersServing[ep], "\n"))
-
+	peers := initPeers(c)
+	fmt.Fprint(w, strings.Join(peers[ep], "\n"))
 }
 
 func send(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	vs := r.FormValue("message")
 	AddHeaders(&w)
-	kPeers := peersServing["convert"]
+	kPeers := initPeers(c)["convert"]
 
 	cf := make(chan FetchRes, len(kPeers))
 	for i := range kPeers {
@@ -223,7 +227,7 @@ func PickRandom(choices []string) string {
 }
 
 func GetRandomWord(pos string, c appengine.Context) chan string {
-	kPeers := peersServing["getword"]
+	kPeers := initPeers(c)["getword"]
 	url := fmt.Sprintf("%s/getword?pos=%s", PickRandom(kPeers), pos)
 	cs := make(chan string, 1)
 	go func() {
@@ -270,10 +274,72 @@ func madlib(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, res)
 }
 
+func StorePeers(c appengine.Context, s string) {
+	key := datastore.NewKey(c, kPeerStoreKind, kPeerStoreId, 0, nil)
+	_, err := datastore.Put(c, key, s)
+	if (err != nil) {
+		panic(err)
+	}
+	StorePeersCached(c, s)
+}
+
+func GetPeersCached(c appengine.Context) string {
+	item, err := memcache.Get(c, kPeerStoreKind)
+	if err == memcache.ErrCacheMiss {
+		return "";
+	} else if err != nil {
+		c.Errorf("error getting item: %v", err)
+	}
+	return string(item.Value)
+}
+
+func StorePeersCached(c appengine.Context, s string) {
+	item := &memcache.Item {
+		Key: kPeerStoreKind,
+		Value: []byte(s),
+	}
+	err := memcache.Set(c, item)
+	if err != nil {
+		c.Errorf("error setting item: %v", err)
+	}
+}
+
+func GetPeers(c appengine.Context) string {
+	if (c == nil) {
+		return kPeerSourceStatic
+	}
+	var s string
+	s = GetPeersCached(c)
+	if (s != "") {
+		return s
+	}
+	key := datastore.NewKey(c, kPeerStoreKind, kPeerStoreId, 0, nil)
+	err := datastore.Get(c, key, &s)
+	if (err != nil) {
+		c.Errorf("Error reading from datastore %s", err)
+	}
+	if (s == "") {
+		s = kPeerSourceStatic
+		c.Warningf("Datastore read failed. Using static peers")
+	}
+	StorePeersCached(c, s)
+	return s
+}
+
 func updatePeers(w http.ResponseWriter, r *http.Request) {
-	content, _ := ioutil.ReadAll(r.Body)
+	contentB, _ := ioutil.ReadAll(r.Body)
+	content := string(contentB)
 	c := appengine.NewContext(r)
 	c.Infof("Got new update: %s", content)
 	AddHeaders(&w)
+
+	if (len(content) > 9000) {
+		c.Errorf("Update peer request! It's over 9000! Rejectzored!")
+		fmt.Fprint(w, "Too long. Rejectzored.")
+		return
+	}
+
+	StorePeers(c, content)
+
 	fmt.Fprint(w, "Updated")
 }
