@@ -51,6 +51,7 @@ func init() {
 var peerSplitRe = regexp.MustCompile(`\t`)
 var	trailingSlashRe = regexp.MustCompile("/$")
 var appspotPrefixRe = regexp.MustCompile(`\.appspot.com.*`)
+var appspotMatchRe = regexp.MustCompile(`http://[^.]+\.appspot\.com.*`)
 
 type FetchRes struct {
 	url, res string
@@ -66,15 +67,16 @@ func initPeers(c appengine.Context) map[string][]string {
 	lines := strings.Split(GetPeers(c), "\n")
 	for li := range lines {
 		v := peerSplitRe.Split(lines[li], len(fields))
-		//    rMap[lines[li]] = []string {strings.Join(v, ";"),fmt.Sprintf("%d %d", len(v), len(fields))}
 		for len(v) < len(fields) {
 			v = append(v, "F")
 		}
 //		log.Printf("Got %s", strings.Join(v, ";"))
 		url := trailingSlashRe.ReplaceAllString(v[0], "")
+		if (!appspotMatchRe.MatchString(url)) {
+			continue
+		}
 		for fi := 1; fi < len(fields); fi++ {
 			val, _ := strconv.ParseBool(v[fi])
-			//      peerMap[url][fields[fi]] = val
 			if val {
 				rMap[fields[fi]] = append(rMap[fields[fi]], url)
 			}
@@ -91,17 +93,17 @@ func root(w http.ResponseWriter, r *http.Request) {
 <title>STEP HW7 Example Server</title>
 </head>
 <body>
-		Try these example links:
+Try these example links:
 <ul>
-		<li><a href="/convert?message=DoAndroidsDreamOfElectricSheep?">/convert?message=DoAndroidsDreamOfElectricSheep?</a>
-    <li><a href="/show?message=RailFenceCipher">/show?message=RailFenceCipher</a>
-								 <li><a href="/peers">/peers</a> (these servers provide /convert)
-								 <li><a href="/peers?endpoint=getword">/peers?endpoint=getword</a> (these servers provide /getword and can be used for generating madlibs)
-	<li><a href="/getword?pos=animal">/getword?pos=animal</a> (My server supports these parts of speech (pos): verb, noun, adjective, animal, name, adverb, exclaimation. You can implement whatever pos you want. If you get a request for an unsupported pos, just return a random word)
-								 <li><a href="/madlib">/madlib</a> (Generates a random madlib)
+<li><a href="/convert?message=DoAndroidsDreamOfElectricSheep?">/convert?message=DoAndroidsDreamOfElectricSheep?</a>
+<li><a href="/show?message=RailFenceCipher">/show?message=RailFenceCipher</a>
+<li><a href="/peers">/peers</a> (these servers provide /convert)
+<li><a href="/peers?endpoint=getword">/peers?endpoint=getword</a> (these servers provide /getword and can be used for generating madlibs)
+<li><a href="/getword?pos=animal">/getword?pos=animal</a> (My server supports these parts of speech (pos): verb, noun, adjective, animal, name, adverb, exclaimation. You can implement whatever pos you want. If you get a request for an unsupported pos, just return a random word)
+<li><a href="/madlib">/madlib</a> (Generates a random madlib)
 </ul>
 </body>
-		`)
+`)
 }
 
 func AddHeaders(w *http.ResponseWriter) {
@@ -356,7 +358,7 @@ func updatePeers(w http.ResponseWriter, r *http.Request) {
 	contentB, _ := ioutil.ReadAll(r.Body)
 	content := string(contentB)
 	c := appengine.NewContext(r)
-	c.Infof("Got new update: %s", content)
+
 	AddHeaders(&w)
 
 	if (len(content) > 9000) {
@@ -371,6 +373,7 @@ func updatePeers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.Infof("Got new update: %s", content)
 	StorePeers(c, content)
 
 	fmt.Fprint(w, "Updated")
