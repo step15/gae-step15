@@ -361,6 +361,12 @@ func updatePeers(w http.ResponseWriter, r *http.Request) {
 
 	AddHeaders(&w)
 
+	if (len(content) < 5) {
+		c.Errorf("Empty update peer request. Rejected.")
+		fmt.Fprint(w, "Emtpy request rejected")
+		return
+	}
+
 	if (len(content) > 9000) {
 		c.Errorf("Update peer request! It's over 9000! Rejectzored!")
 		fmt.Fprint(w, "Too long. Rejectzored.")
