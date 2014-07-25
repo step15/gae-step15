@@ -113,38 +113,38 @@ func AddHeaders(w *http.ResponseWriter) {
 
 func ReqWantsJson(r *http.Request) bool {
 	if (r.FormValue("fmt") == "json") {
-		reutrn true
+		return true
 	}
 	v, _ := strconv.ParseBool(r.FormValue("json"))
 	return v
 }
 
-func RailCipher(vs string, k int32, debug bool, c appengine.Context) string {
+func RailCipher(vs string, k int, debug bool) string {
 	var w bytes.Buffer
 
 	v := strings.Split(vs, "")
 	for ik := 0; ik < k; ik++ {
 		if debug {
-			fmt.Fprint(w, "%d:", ik)
+			fmt.Fprint(&w, "%d:", ik)
 		}
 		for i := 0; i < len(v); {
 			if ik == 0 {
-				fmt.Fprint(w, v[i])
+				fmt.Fprint(&w, v[i])
 				i += (k - 1) * 2
 			} else if ik > 0 && ik < k-1 { // middle
 				i += ik
 				if i < len(v) {
-					fmt.Fprint(w, v[i])
+					fmt.Fprint(&w, v[i])
 				}
 				i += 2 * (k - ik - 1) // go to bottom and come back
 				if i < len(v) {
-					fmt.Fprint(w, v[i])
+					fmt.Fprint(&w, v[i])
 				}
 				i += ik // return to top
 			} else { // bottom
 				i += ik
 				if i < len(v) {
-					fmt.Fprint(w, v[i])
+					fmt.Fprint(&w, v[i])
 				}
 				i += ik
 			}
@@ -164,7 +164,8 @@ func recv(w http.ResponseWriter, r *http.Request) {
 	if k < 1 {
 		k = 3
 	}
-	RailCipher(vs, k, debug)
+	es := RailCipher(vs, k, debug)
+	fmt.Fprint(w, es)
 }
 
 func peers(w http.ResponseWriter, r *http.Request) {
