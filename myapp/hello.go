@@ -182,7 +182,7 @@ func recv(w http.ResponseWriter, r *http.Request) {
 	var rm SimpleMessage
 	rm.Result = es
 	if (ReqWantsJson(r)) {
-		js, _ := json.Marshal(rm)
+		js, _ := json.MarshalIndent(rm, "", "  ")
 		fmt.Fprint(w, string(js))
 	} else {
 		fmt.Fprint(w, rm.Result)
@@ -220,7 +220,7 @@ func send(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if (ReqWantsJson(r)) {
-		rs, _ := json.Marshal(rm)
+		rs, _ := json.MarshalIndent(rm, "", "  ")
 		fmt.Fprint(w, string(rs))
 	} else {
 		for _, res := range rm.ShowResults {
