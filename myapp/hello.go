@@ -1,6 +1,7 @@
 package hello
 
 import (
+	"bytes"
 	"appengine"
 	"appengine/urlfetch"
 	"fmt"
@@ -110,22 +111,21 @@ func AddHeaders(w *http.ResponseWriter) {
 	(*w).Header().Set("Content-Type", "text/plain; charset=utf-8")
 }
 
-func recv(w http.ResponseWriter, r *http.Request) {
-	AddHeaders(&w)
-	var vs = r.FormValue("content")
-	if len(vs) < 1 {
-		vs = r.FormValue("message")
+func ReqWantsJson(r *http.Request) bool {
+	if (r.FormValue("fmt") == "json") {
+		reutrn true
 	}
+	v, _ := strconv.ParseBool(r.FormValue("json"))
+	return v
+}
+
+func RailCipher(vs string, k int32, debug bool, c appengine.Context) {
+	var buffer bytes.Buffer
+
 	v := strings.Split(vs, "")
-	var k, _ = strconv.Atoi(r.FormValue("k"))
-	if k < 1 {
-		k = 3
-	}
-	debug, _ := strconv.ParseBool(r.FormValue("debug"))
-	// fmt.Fprintf(w, "k=%d\n", k)
 	for ik := 0; ik < k; ik++ {
 		if debug {
-			fmt.Fprintf(w, "%d:", ik)
+			fmt.Fprint(w, "%d:", ik)
 		}
 		for i := 0; i < len(v); {
 			if ik == 0 {
@@ -149,10 +149,22 @@ func recv(w http.ResponseWriter, r *http.Request) {
 				i += ik
 			}
 		}
-		if debug {
-			fmt.Fprint(w, "\n")
-		}
 	}
+	return rs;
+}
+
+func recv(w http.ResponseWriter, r *http.Request) {
+	AddHeaders(&w)
+	debug, _ := strconv.ParseBool(r.FormValue("debug"))
+	var vs = r.FormValue("content")
+	if len(vs) < 1 {
+		vs = r.FormValue("message")
+	}
+	var k, _ = strconv.Atoi(r.FormValue("k"))
+	if k < 1 {
+		k = 3
+	}
+	RailCipher(vs, k, debug)
 }
 
 func peers(w http.ResponseWriter, r *http.Request) {
