@@ -1,22 +1,22 @@
 package hello
 
 import (
-	"io"
-	"encoding/json"
-	"bytes"
 	"appengine"
+	"appengine/datastore"
+	"appengine/memcache"
 	"appengine/urlfetch"
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
-	"regexp"
-	"log"
-	"appengine/datastore"
-	"appengine/memcache"
 )
 
 const kPeerStoreKind = "peerSouce"
@@ -52,7 +52,7 @@ func init() {
 }
 
 var peerSplitRe = regexp.MustCompile(`\t`)
-var	trailingSlashRe = regexp.MustCompile("/$")
+var trailingSlashRe = regexp.MustCompile("/$")
 var appspotPrefixRe = regexp.MustCompile(`\.appspot.com.*`)
 var appspotMatchRe = regexp.MustCompile(`http://[^.]+\.appspot\.com.*`)
 
@@ -85,9 +85,9 @@ func initPeers(c appengine.Context) map[string][]string {
 		for len(v) < len(fields) {
 			v = append(v, "F")
 		}
-//		log.Printf("Got %s", strings.Join(v, ";"))
+		//		log.Printf("Got %s", strings.Join(v, ";"))
 		url := trailingSlashRe.ReplaceAllString(v[0], "")
-		if (!appspotMatchRe.MatchString(url)) {
+		if !appspotMatchRe.MatchString(url) {
 			continue
 		}
 		for fi := 1; fi < len(fields); fi++ {
@@ -126,7 +126,7 @@ func AddHeaders(w *http.ResponseWriter) {
 }
 
 func ReqWantsJson(r *http.Request) bool {
-	if (r.FormValue("fmt") == "json") {
+	if r.FormValue("fmt") == "json" {
 		return true
 	}
 	v, _ := strconv.ParseBool(r.FormValue("json"))
@@ -164,7 +164,7 @@ func RailCipher(vs string, k int, debug bool) string {
 			}
 		}
 	}
-	return w.String();
+	return w.String()
 }
 
 func recv(w http.ResponseWriter, r *http.Request) {
@@ -186,7 +186,7 @@ func recv(w http.ResponseWriter, r *http.Request) {
 func SimpleResponse(w io.Writer, r *http.Request, s string) {
 	var rm SimpleMessage
 	rm.Result = s
-	if (ReqWantsJson(r)) {
+	if ReqWantsJson(r) {
 		js, _ := json.MarshalIndent(rm, "", "  ")
 		fmt.Fprint(w, string(js))
 	} else {
@@ -221,10 +221,10 @@ func send(w http.ResponseWriter, r *http.Request) {
 
 	var rm ShowMessage
 	for _ = range kPeers {
-		rm.ShowResults = append(rm.ShowResults, <- cf)
+		rm.ShowResults = append(rm.ShowResults, <-cf)
 	}
 
-	if (ReqWantsJson(r)) {
+	if ReqWantsJson(r) {
 		rs, _ := json.MarshalIndent(rm, "", "  ")
 		fmt.Fprint(w, string(rs))
 	} else {
@@ -245,10 +245,10 @@ func FetchUrl(url string, c appengine.Context, cf chan FetchRes) {
 	if err == nil {
 		body, _ := ioutil.ReadAll(resp.Body)
 		r.Res = string(body)
-		if (resp.StatusCode != 200) {
+		if resp.StatusCode != 200 {
 			r.Res = fmt.Sprintf("[Failure (%s): %s]", resp.Status, r.Res)
 		}
-//		c.Infof("Success getting URL: %s => %s", url, r.Res)
+		//		c.Infof("Success getting URL: %s => %s", url, r.Res)
 	} else {
 		c.Warningf("Error fetching %s => %s", url, err)
 		r.Res = fmt.Sprintf("[Error: %s]", err)
@@ -304,7 +304,7 @@ func GetRandomWord(pos string, c appengine.Context) chan string {
 	go func() {
 		cf := make(chan FetchRes, 1)
 		FetchUrl(url, c, cf)
-		p := <- cf
+		p := <-cf
 		cs <- p.Res
 	}()
 	return cs
@@ -350,7 +350,7 @@ func StorePeers(c appengine.Context, s string) {
 	ss.s = s
 	key := datastore.NewKey(c, kPeerStoreKind, kPeerStoreId, 0, nil)
 	_, err := datastore.Put(c, key, ss)
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 	StorePeersCached(c, s)
@@ -359,7 +359,7 @@ func StorePeers(c appengine.Context, s string) {
 func GetPeersCached(c appengine.Context) string {
 	item, err := memcache.Get(c, kPeerStoreKind)
 	if err == memcache.ErrCacheMiss {
-		return "";
+		return ""
 	} else if err != nil {
 		c.Errorf("error getting item: %v", err)
 	}
@@ -367,8 +367,8 @@ func GetPeersCached(c appengine.Context) string {
 }
 
 func StorePeersCached(c appengine.Context, s string) {
-	item := &memcache.Item {
-		Key: kPeerStoreKind,
+	item := &memcache.Item{
+		Key:   kPeerStoreKind,
 		Value: []byte(s),
 	}
 	err := memcache.Set(c, item)
@@ -378,22 +378,22 @@ func StorePeersCached(c appengine.Context, s string) {
 }
 
 func GetPeers(c appengine.Context) string {
-	if (c == nil) {
+	if c == nil {
 		return kPeerSourceStatic
 	}
 	var s string
 	s = GetPeersCached(c)
-	if (s != "") {
+	if s != "" {
 		return s
 	}
 	ss := new(StringStruct)
 	key := datastore.NewKey(c, kPeerStoreKind, kPeerStoreId, 0, nil)
 	err := datastore.Get(c, key, ss)
-	if (err != nil) {
+	if err != nil {
 		c.Errorf("Error reading from datastore %s", err)
 	}
 	s = ss.s
-	if (s == "") {
+	if s == "" {
 		s = kPeerSourceStatic
 		c.Warningf("Datastore read failed. Using static peers")
 	}
@@ -408,20 +408,20 @@ func updatePeers(w http.ResponseWriter, r *http.Request) {
 
 	AddHeaders(&w)
 
-	if (len(content) < 5) {
+	if len(content) < 5 {
 		c.Errorf("Empty update peer request. Rejected.")
 		fmt.Fprint(w, "Emtpy request rejected")
 		return
 	}
 
-	if (len(content) > 9000) {
+	if len(content) > 9000 {
 		c.Errorf("Update peer request! It's over 9000! Rejectzored!")
 		fmt.Fprint(w, "Too long. Rejectzored.")
 		return
 	}
 
 	old := GetPeersCached(c)
-	if (old == content) {
+	if old == content {
 		fmt.Fprint(w, "Same as existing. Ignored.")
 		return
 	}
