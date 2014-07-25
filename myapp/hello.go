@@ -1,6 +1,7 @@
 package hello
 
 import (
+	"encoding/json"
 	"bytes"
 	"appengine"
 	"appengine/urlfetch"
@@ -53,6 +54,10 @@ var peerSplitRe = regexp.MustCompile(`\t`)
 var	trailingSlashRe = regexp.MustCompile("/$")
 var appspotPrefixRe = regexp.MustCompile(`\.appspot.com.*`)
 var appspotMatchRe = regexp.MustCompile(`http://[^.]+\.appspot\.com.*`)
+
+type Message struct {
+	Result string `json:"result"`
+}
 
 type FetchRes struct {
 	url, res string
@@ -154,6 +159,7 @@ func RailCipher(vs string, k int, debug bool) string {
 }
 
 func recv(w http.ResponseWriter, r *http.Request) {
+	//	c := appengine.NewContext(r)
 	AddHeaders(&w)
 	debug, _ := strconv.ParseBool(r.FormValue("debug"))
 	var vs = r.FormValue("content")
@@ -165,7 +171,13 @@ func recv(w http.ResponseWriter, r *http.Request) {
 		k = 3
 	}
 	es := RailCipher(vs, k, debug)
-	fmt.Fprint(w, es)
+	rm := Message{es}
+	if (ReqWantsJson(r)) {
+		js, _ := json.Marshal(rm)
+		fmt.Fprint(w, string(js))
+	} else {
+		fmt.Fprint(w, rm.Result)
+	}
 }
 
 func peers(w http.ResponseWriter, r *http.Request) {
