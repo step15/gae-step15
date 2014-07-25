@@ -119,8 +119,8 @@ func ReqWantsJson(r *http.Request) bool {
 	return v
 }
 
-func RailCipher(vs string, k int32, debug bool, c appengine.Context) {
-	var buffer bytes.Buffer
+func RailCipher(vs string, k int32, debug bool, c appengine.Context) string {
+	var w bytes.Buffer
 
 	v := strings.Split(vs, "")
 	for ik := 0; ik < k; ik++ {
@@ -150,7 +150,7 @@ func RailCipher(vs string, k int32, debug bool, c appengine.Context) {
 			}
 		}
 	}
-	return rs;
+	return w.String();
 }
 
 func recv(w http.ResponseWriter, r *http.Request) {
