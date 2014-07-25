@@ -55,16 +55,24 @@ var	trailingSlashRe = regexp.MustCompile("/$")
 var appspotPrefixRe = regexp.MustCompile(`\.appspot.com.*`)
 var appspotMatchRe = regexp.MustCompile(`http://[^.]+\.appspot\.com.*`)
 
-type Message struct {
-	Result string `json:"result"`
-}
-
 type FetchRes struct {
-	url, res string
+	Url, Res string
 }
 
 type StringStruct struct {
 	s string
+}
+
+type SimpleMessage struct {
+	Result string `json:"result"`
+}
+
+type PeersMessage struct {
+	Peers []string `json:"peers"`
+}
+
+type ShowMessage struct {
+	ShowResults []FetchRes `json:"showResults"`
 }
 
 func initPeers(c appengine.Context) map[string][]string {
@@ -171,7 +179,8 @@ func recv(w http.ResponseWriter, r *http.Request) {
 		k = 3
 	}
 	es := RailCipher(vs, k, debug)
-	rm := Message{es}
+	var rm SimpleMessage
+	rm.Result = es
 	if (ReqWantsJson(r)) {
 		js, _ := json.Marshal(rm)
 		fmt.Fprint(w, string(js))
@@ -205,12 +214,20 @@ func send(w http.ResponseWriter, r *http.Request) {
 		go FetchUrl(url, c, cf)
 	}
 
-	for i := range kPeers {
-		res := <- cf
-		showUrl := appspotPrefixRe.ReplaceAllString(res.url, "...")
-		showRes := strings.Replace(strings.TrimSpace(res.res), "\n", " ↓ ", -1)
-		fmt.Fprintf(w, "%s => %s\n", showUrl, showRes)
-		i++
+	var rm ShowMessage
+	for _ = range kPeers {
+		rm.ShowResults = append(rm.ShowResults, <- cf)
+	}
+
+	if (ReqWantsJson(r)) {
+		rs, _ := json.Marshal(rm)
+		fmt.Fprint(w, string(rs))
+	} else {
+		for _, res := range rm.ShowResults {
+			showUrl := appspotPrefixRe.ReplaceAllString(res.Url, "...")
+			showRes := strings.Replace(strings.TrimSpace(res.Res), "\n", " ↓ ", -1)
+			fmt.Fprintf(w, "%s => %s\n", showUrl, showRes)
+		}
 	}
 }
 
@@ -219,17 +236,17 @@ func FetchUrl(url string, c appengine.Context, cf chan FetchRes) {
 	c.Infof("Fetching URL: %s", url)
 	resp, err := client.Get(url)
 	var r FetchRes
-	r.url = url
+	r.Url = url
 	if err == nil {
 		body, _ := ioutil.ReadAll(resp.Body)
-		r.res = string(body)
+		r.Res = string(body)
 		if (resp.StatusCode != 200) {
-			r.res = fmt.Sprintf("[Failure (%s): %s]", resp.Status, r.res)
+			r.Res = fmt.Sprintf("[Failure (%s): %s]", resp.Status, r.Res)
 		}
-//		c.Infof("Success getting URL: %s => %s", url, r.res)
+//		c.Infof("Success getting URL: %s => %s", url, r.Res)
 	} else {
 		c.Warningf("Error fetching %s => %s", url, err)
-		r.res = fmt.Sprintf("[Error: %s]", err)
+		r.Res = fmt.Sprintf("[Error: %s]", err)
 	}
 	cf <- r
 }
@@ -283,7 +300,7 @@ func GetRandomWord(pos string, c appengine.Context) chan string {
 		cf := make(chan FetchRes, 1)
 		FetchUrl(url, c, cf)
 		p := <- cf
-		cs <- p.res
+		cs <- p.Res
 	}()
 	return cs
 }
