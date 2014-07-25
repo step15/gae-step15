@@ -1,6 +1,7 @@
 package hello
 
 import (
+	"io"
 	"encoding/json"
 	"bytes"
 	"appengine"
@@ -179,8 +180,12 @@ func recv(w http.ResponseWriter, r *http.Request) {
 		k = 3
 	}
 	es := RailCipher(vs, k, debug)
+	SimpleResponse(w, r, es)
+}
+
+func SimpleResponse(w io.Writer, r *http.Request, s string) {
 	var rm SimpleMessage
-	rm.Result = es
+	rm.Result = s
 	if (ReqWantsJson(r)) {
 		js, _ := json.MarshalIndent(rm, "", "  ")
 		fmt.Fprint(w, string(js))
@@ -285,7 +290,7 @@ func getword(w http.ResponseWriter, r *http.Request) {
 	default:
 		word = PickRandom(append(append(append(append(append(adverbs, exclaimations...), adjectives...), animals...), nouns...), verbs...))
 	}
-	fmt.Fprint(w, word)
+	SimpleResponse(w, r, word)
 }
 
 func PickRandom(choices []string) string {
@@ -337,7 +342,7 @@ func madlib(w http.ResponseWriter, r *http.Request) {
 	default:
 		panic("Impossible")
 	}
-	fmt.Fprint(w, res)
+	SimpleResponse(w, r, res)
 }
 
 func StorePeers(c appengine.Context, s string) {
