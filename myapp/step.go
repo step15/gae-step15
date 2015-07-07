@@ -97,7 +97,7 @@ func root(w http.ResponseWriter, r *http.Request) {
 Try these example links:
 <ul>
 <li><a href="/convert?message=DoAndroidsDreamOfElectricSheep?">/convert?message=DoAndroidsDreamOfElectricSheep?</a>
-<li><a href="/show?message=ピタゴラ暗号棒">/show?message=ピタゴラ暗号棒</a>
+<li><a href="/show?message=ピタゴラ暗号棒ではない">/show?message=ピタゴラ暗号棒ではない</a>
 <li><a href="/peers">/peers</a> (these servers provide /convert)
 <li><a href="/peers?endpoint=getword">/peers?endpoint=getword</a> (these servers provide /getword and can be used for generating madlibs)
 <li><a href="/getword?pos=animal">/getword?pos=animal</a> (My server supports these parts of speech (pos): verb, noun, adjective, animal, name, adverb, exclaimation. You can implement whatever pos you want. If you get a request for an unsupported pos, just return a random word)
