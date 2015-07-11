@@ -175,28 +175,38 @@ func RailCipher(vs string, k int, debug bool) string {
 	v := strings.Split(vs, "")
 	for ik := 0; ik < k; ik++ {
 		if debug {
-			fmt.Fprint(&w, "%d:", ik)
+			if ik > 0 {
+				fmt.Fprint(&w, "\n")
+			}
+			fmt.Fprintf(&w, "%2d:", ik)
 		}
 		for i := 0; i < len(v); {
+			advance := func(x, printed int) {
+				if debug {
+					fmt.Fprint(&w, strings.Repeat("-", x-printed))
+				}
+				i += x
+			}
+
 			if ik == 0 {
 				fmt.Fprint(&w, v[i])
-				i += (k - 1) * 2
+				advance((k-1)*2, 1)
 			} else if ik > 0 && ik < k-1 { // middle
-				i += ik
+				advance(ik, 0)
 				if i < len(v) {
 					fmt.Fprint(&w, v[i])
 				}
-				i += 2 * (k - ik - 1) // go to bottom and come back
+				advance(2*(k-ik-1), 1) // go to bottom and come back
 				if i < len(v) {
 					fmt.Fprint(&w, v[i])
 				}
-				i += ik // return to top
+				advance(ik, 1) // return to top
 			} else { // bottom
-				i += ik
+				advance(ik, 0)
 				if i < len(v) {
 					fmt.Fprint(&w, v[i])
 				}
-				i += ik
+				advance(ik, 1)
 			}
 		}
 	}
