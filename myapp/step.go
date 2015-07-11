@@ -91,18 +91,59 @@ func root(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprint(w, `
 <head>
-<title>STEP HW7 Example Server</title>
+<link rel="stylesheet" href="pure/pure-min.css">
+<title>STEP HW7 例文のサーバー</title>
+<style>
+th {
+  background-color: #e0e0e0;
+  color: #000;
+}
+td.left {
+  text-align: start
+}
+td.right {
+  text-align: right
+}
+</style>
 </head>
-<body>
-Try these example links:
-<ul>
-<li><a href="/convert?message=DoAndroidsDreamOfElectricSheep?">/convert?message=DoAndroidsDreamOfElectricSheep?</a>
-<li><a href="/show?message=ピタゴラ暗号棒ではない">/show?message=ピタゴラ暗号棒ではない</a>
-<li><a href="/peers">/peers</a> (these servers provide /convert)
-<li><a href="/peers?endpoint=getword">/peers?endpoint=getword</a> (these servers provide /getword and can be used for generating madlibs)
-<li><a href="/getword?pos=animal">/getword?pos=animal</a> (My server supports these parts of speech (pos): verb, noun, adjective, animal, name, adverb, exclaimation. You can implement whatever pos you want. If you get a request for an unsupported pos, just return a random word)
-<li><a href="/madlib">/madlib</a> (Generates a random madlib)
-</ul>
+<body style="margin: 10px">
+<table border=1 class=pure-table-striped>
+<thead><tr>
+<th width=50%>以下のリンクを試してください</th>
+<th width=50% class=right>フォームに何かを入力したら、飛ぶ先のURLを見てみてください</th>
+</tr></thead><tbody>
+<tr><td><a href="/convert?message=DoAndroidsDreamOfElectricSheep?">/convert?message=DoAndroidsDreamOfElectricSheep?</a>
+  <td class=right><form method=get action=convert><input placeholder="このinputタグの名前が「message」です" type=text name=message size=42><input type=submit value="Convert!"></form></tr>
+<tr><td><a href="/show?message=ピタゴラ暗号棒ではない">/show?message=ピタゴラ暗号棒ではない</a>
+  <td class=right><form method=get action=show><input placeholder="このinputタグの名前が「message」です" type=text name=message size=42><input type=submit value="Show!"></form></tr>
+<tr><td><a href="/peers">/peers</a> (these servers provide /convert)<br>
+  <a href="/peers?endpoint=getword">/peers?endpoint=getword</a> (these servers provide /getword and can be used for generating madlibs)
+  <td class=right><form method=get action=peers>
+    <select name=endpoint>
+    <option value="convert">convert</option>
+    <option value="show">show</option>
+    <option value="getword">getword</option>
+    <option value="madlib">madlib</option>
+    <option value="peers">peers</option>
+    </select>
+    <input type=submit value="Peers!">
+    </form></tr>
+<tr><td><a href="/getword?pos=animal">/getword?pos=animal</a> (My server supports these parts of speech (pos): verb, noun, adjective, animal, name, adverb, exclaimation. You can implement whatever pos you want. If you get a request for an unsupported pos, just return a random word)
+  <td class=right><form method=get action=getword>
+    <select name=pos>
+    <option value="verb">verb</option>
+    <option value="noun">noun</option>
+    <option value="adjective">adjective</option>
+    <option value="adverb">adverb</option>
+    <option value="animal">animal</option>
+    <option value="name">name</option>
+    <option value="exclaimation">exclaimation</option>
+    </select>
+    <input type=submit value="Getword!">
+<tr><td><a href="/madlib">/madlib</a> (Generates a random madlib)
+  <td class=right><form method=get action=madlib><input type=submit value="Madlib!"></form></tr>
+</tbody>
+</table>
 </body>
 `)
 }

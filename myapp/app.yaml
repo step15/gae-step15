@@ -9,5 +9,9 @@ handlers:
   mime_type: image/gif
   upload: ico/wind.gif
 
+- url: /pure
+  static_dir: pure
+  mime_type: text/css
+
 - url: /.*
   script: _go_app
