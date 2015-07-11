@@ -140,6 +140,7 @@ form {
 <tr><td><a href="/getword?pos=animal">/getword?pos=animal</a> このサーバーは以下のparts of speech (pos)に対応しています: verb, noun, adjective, animal, name, adverb, exclaimation. 好きなposを実装してください. 対応していないposのリクエストがをもらったら適当なランダムの単語を返しても構いません！
   <td class=right><form method=get action=getword>
     <select name=pos>
+    <option value=""></option>
     <option value="verb">verb</option>
     <option value="noun">noun</option>
     <option value="adjective">adjective</option>
