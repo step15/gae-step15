@@ -153,6 +153,20 @@ form {
   <td class=right><form method=get action=madlib><input type=submit value="Madlib!"></form></tr>
 </tbody>
 </table>
+
+<div style="height:100em"></div>
+ちなみに、私の/convertのURLは何をやっているんだろうと不思議に思ってたら、
+これで試してみてください：
+<form method=get action=convert>
+<table class="pure-table pure-table-bordered">
+<tr><td class=right>message<td><input type=text name=message size=100 value="Life is like riding a bicycle. To keep your balance you must keep moving.
+  --Albert Einstein">
+<tr><td class=right>k<td><input type=text name=k size=2 value=5>
+<tr><td class=right>magic<td><input type=checkbox name=debug checked=true>
+</table>
+<input type=submit value=convert>
+</form>
+
 </body>
 `)
 }
@@ -174,6 +188,9 @@ func RailCipher(vs string, k int, debug bool) string {
 
 	v := strings.Split(vs, "")
 	for ik := 0; ik < k; ik++ {
+		if ik >= len(v) {
+			break
+		}
 		if debug {
 			if ik > 0 {
 				fmt.Fprint(&w, "\n")
@@ -217,6 +234,10 @@ func recv(w http.ResponseWriter, r *http.Request) {
 	//	c := appengine.NewContext(r)
 	AddHeaders(&w)
 	debug, _ := strconv.ParseBool(r.FormValue("debug"))
+	switch r.FormValue("debug") {
+	case "on":
+		debug = true
+	}
 	var vs = r.FormValue("content")
 	if len(vs) < 1 {
 		vs = r.FormValue("message")
