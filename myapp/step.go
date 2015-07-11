@@ -98,11 +98,20 @@ th {
   background-color: #e0e0e0;
   color: #000;
 }
+td {
+  vertical-align: middle;
+}
 td.left {
-  text-align: start
+  text-align: start;
+  vertical-align: middle;
 }
 td.right {
-  text-align: right
+  text-align: right;
+  vertical-align: middle;
+}
+form {
+  vertical-align: middle;
+  margin: 0;
 }
 </style>
 </head>
@@ -116,8 +125,8 @@ td.right {
   <td class=right><form method=get action=convert><input placeholder="このinputタグの名前が「message」です" type=text name=message size=42><input type=submit value="Convert!"></form></tr>
 <tr><td><a href="/show?message=ピタゴラ暗号棒ではない">/show?message=ピタゴラ暗号棒ではない</a>
   <td class=right><form method=get action=show><input placeholder="このinputタグの名前が「message」です" type=text name=message size=42><input type=submit value="Show!"></form></tr>
-<tr><td><a href="/peers">/peers</a> (these servers provide /convert)<br>
-  <a href="/peers?endpoint=getword">/peers?endpoint=getword</a> (these servers provide /getword and can be used for generating madlibs)
+<tr><td><a href="/peers">/peers</a> (表示されるサーバーは/convertに対応しています)<br>
+  <a href="/peers?endpoint=getword">/peers?endpoint=getword</a> (表示されるサーバーは/getwordを対応しているので、/madlibを作るのに使えます)
   <td class=right><form method=get action=peers>
     <select name=endpoint>
     <option value="convert">convert</option>
@@ -128,7 +137,7 @@ td.right {
     </select>
     <input type=submit value="Peers!">
     </form></tr>
-<tr><td><a href="/getword?pos=animal">/getword?pos=animal</a> (My server supports these parts of speech (pos): verb, noun, adjective, animal, name, adverb, exclaimation. You can implement whatever pos you want. If you get a request for an unsupported pos, just return a random word)
+<tr><td><a href="/getword?pos=animal">/getword?pos=animal</a> このサーバーは以下のparts of speech (pos)に対応しています: verb, noun, adjective, animal, name, adverb, exclaimation. 好きなposを実装してください. 対応していないposのリクエストがをもらったら適当なランダムの単語を返しても構いません！
   <td class=right><form method=get action=getword>
     <select name=pos>
     <option value="verb">verb</option>
@@ -139,8 +148,8 @@ td.right {
     <option value="name">name</option>
     <option value="exclaimation">exclaimation</option>
     </select>
-    <input type=submit value="Getword!">
-<tr><td><a href="/madlib">/madlib</a> (Generates a random madlib)
+    <input type=submit value="Getword!"></form>
+<tr><td><a href="/madlib">/madlib</a> (ランダムなmadlibを作成します)
   <td class=right><form method=get action=madlib><input type=submit value="Madlib!"></form></tr>
 </tbody>
 </table>
