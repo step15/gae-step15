@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -22,7 +23,8 @@ import (
 
 const kPeerStoreKind = "peerSouce"
 const kPeerStoreId = "current"
-const kSelfURL = "http://step15-krispop.appspot.com"
+const kSelfName = "step15-krispop"
+const kSelfUrl = "http://" + kSelfName + ".appspot.com"
 const kPeerSourceStatic = `http://step15-krispop.appspot.com/	T	T	T	T	T
 http://regal-sun-100211.appspot.com	T	T	T	T	T`
 
@@ -41,7 +43,7 @@ func init() {
 var peerSplitRe = regexp.MustCompile(`\t`)
 var trailingSlashRe = regexp.MustCompile("/$")
 var appspotPrefixRe = regexp.MustCompile(`\.appspot.com.*`)
-var appspotMatchRe = regexp.MustCompile(`http://[^.]+\.appspot\.com.*`)
+var appspotMatchRe = regexp.MustCompile(`http://([^."']+)\.appspot\.com[^"']*`)
 
 type FetchRes struct {
 	Url, Res string
@@ -89,10 +91,17 @@ func initPeers(c appengine.Context) map[string][]string {
 }
 
 func allPeers(c appengine.Context) []string {
+	m := make(map[string]bool)
 	r := []string{}
 	for _, v := range initPeers(c) {
-		r = append(r, v...)
+		for _, peer := range v {
+			m[peer] = true
+		}
 	}
+	for k, _ := range m {
+		r = append(r, k)
+	}
+	sort.Strings(r)
 	return r
 }
 
@@ -105,19 +114,54 @@ func contains(needle string, haystack []string) bool {
 	return false
 }
 
+func selfBase(r *http.Request) string {
+	appengine.NewContext(r).Infof("request = %v", r)
+	host := kSelfUrl
+	if server, port := r.Header["X-Appengine-Server-Name"], r.Header["X-Appengine-Server-Port"]; len(server) > 0 {
+		host = server[0]
+		if len(port) > 0 {
+			host = host + ":" + port[0]
+		}
+	}
+	return fmt.Sprintf("http://%s", host)
+}
+
 func root(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	baseline := ""
 	c := appengine.NewContext(r)
-	if base := r.FormValue("base"); base != "" && contains(base, allPeers(c)) {
-		baseline = "<base href=" + base + ">\n"
+	peers := allPeers(c)
+	base := r.FormValue("base")
+	if base != "" && contains(base, peers) {
+		baseline = "<base href=" + base + ">"
 	}
+
+	// make base selector magic
+	baseSelector := `<form method=get action='` + selfBase(r) + `/'>
+    <select name=base onchange="this.form.submit()">`
+	for _, peer := range peers {
+		names := appspotMatchRe.FindStringSubmatch(peer)
+		name := peer
+		if len(names) > 1 {
+			name = names[1]
+		}
+		c.Infof("peer:%v => names:%v => name:%v", peer, names, name)
+		selected := ""
+		if len(base) < 1 || base == "http://localhost:8080" {
+			base = kSelfUrl
+		}
+		if peer == base {
+			selected = "selected"
+		}
+		baseSelector += `<option ` + selected + ` value="` + peer + `">` + name + `</option>`
+	}
+	baseSelector += `</select>で実行</form>`
+
 	fmt.Fprint(w, `
 <head>
 <link rel="stylesheet" href="pure/pure-min.css">
 <title>STEP HW7 例文のサーバー</title>
-`+baseline+
-		`
+`+baseline+`
 <style>
 th {
   background-color: #e0e0e0;
@@ -179,7 +223,7 @@ form {
   <td class=right><form method=get action=madlib><input type=submit value="Madlib!"></form></tr>
 </tbody>
 </table>
-
+`+baseSelector+`
 <div style="height:100em"></div>
 ちなみに、私の/convertのURLは何をやっているんだろうと不思議に思ってたら、
 これで試してみてください：
