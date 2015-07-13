@@ -24,7 +24,7 @@ import (
 const kPeerStoreKind = "peerSouce"
 const kPeerStoreId = "current"
 const kSelfName = "step15-krispop"
-const kSelfUrl = "http://" + kSelfName + ".appspot.com"
+const kSelfURL = "http://" + kSelfName + ".appspot.com"
 const kPeerSourceStatic = `http://step15-krispop.appspot.com/	T	T	T	T	T
 http://regal-sun-100211.appspot.com	T	T	T	T	T`
 
@@ -115,15 +115,24 @@ func contains(needle string, haystack []string) bool {
 }
 
 func selfBase(r *http.Request) string {
-	appengine.NewContext(r).Infof("request = %v", r)
-	host := kSelfUrl
-	if server, port := r.Header["X-Appengine-Server-Name"], r.Header["X-Appengine-Server-Port"]; len(server) > 0 {
-		host = server[0]
+	appengine.NewContext(r).Infof("request = %v, header=%v, url=%v", r, r.Header, r.URL)
+	base := kSelfURL
+	tryBase := func(server, port []string) {
+		if len(server) < 1 {
+			return
+		}
+		host := server[0]
 		if len(port) > 0 {
 			host = host + ":" + port[0]
 		}
+		base = "http://" + host
 	}
-	return fmt.Sprintf("http://%s", host)
+
+	tryBase([]string{r.URL.Host}, []string{})
+	tryBase(r.Header["Host"], r.Header["Port"])
+	tryBase(r.Header["X-Appengine-Server-Name"], r.Header["X-Appengine-Server-Port"])
+
+	return base
 }
 
 func root(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +157,7 @@ func root(w http.ResponseWriter, r *http.Request) {
 		c.Infof("peer:%v => names:%v => name:%v", peer, names, name)
 		selected := ""
 		if len(base) < 1 || base == "http://localhost:8080" {
-			base = kSelfUrl
+			base = kSelfURL
 		}
 		if peer == base {
 			selected = "selected"
