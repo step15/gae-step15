@@ -450,7 +450,7 @@ func GetRandomWord(pos string, c appengine.Context) chan string {
 		cf := make(chan FetchRes, 1)
 		FetchUrl(url, c, cf)
 		p := <-cf
-		cs <- p.Res
+		cs <- StripTags(p.Res)
 	}()
 	return cs
 }
