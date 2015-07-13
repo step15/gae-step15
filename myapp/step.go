@@ -115,7 +115,7 @@ func contains(needle string, haystack []string) bool {
 }
 
 func selfBase(r *http.Request) string {
-	appengine.NewContext(r).Infof("request = %v, header=%v, url=%v", r, r.Header, r.URL)
+	//	appengine.NewContext(r).Infof("request = %v, header=%v, url=%v", r, r.Header, r.URL)
 	base := kSelfURL
 	tryBase := func(server, port []string) {
 		if len(server) < 1 {
@@ -128,9 +128,9 @@ func selfBase(r *http.Request) string {
 		base = "http://" + host
 	}
 
-	tryBase([]string{r.URL.Host}, []string{})
 	tryBase(r.Header["Host"], r.Header["Port"])
 	tryBase(r.Header["X-Appengine-Server-Name"], r.Header["X-Appengine-Server-Port"])
+	tryBase([]string{r.URL.Host}, []string{})
 
 	return base
 }
@@ -154,7 +154,6 @@ func root(w http.ResponseWriter, r *http.Request) {
 		if len(names) > 1 {
 			name = names[1]
 		}
-		c.Infof("peer:%v => names:%v => name:%v", peer, names, name)
 		selected := ""
 		if len(base) < 1 || base == "http://localhost:8080" {
 			base = kSelfURL
