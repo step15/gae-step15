@@ -22,8 +22,9 @@ import (
 
 const kPeerStoreKind = "peerSouce"
 const kPeerStoreId = "current"
-
-const kPeerSourceStatic = `http://step-test-krispop.appspot.com/	T	T	T	T	T`
+const kSelfURL = "http://step15-krispop.appspot.com"
+const kPeerSourceStatic = `http://step15-krispop.appspot.com/	T	T	T	T	T
+http://regal-sun-100211.appspot.com	T	T	T	T	T`
 
 func init() {
 	http.HandleFunc("/", root)
@@ -87,12 +88,36 @@ func initPeers(c appengine.Context) map[string][]string {
 	return rMap
 }
 
+func allPeers(c appengine.Context) []string {
+	r := []string{}
+	for _, v := range initPeers(c) {
+		r = append(r, v...)
+	}
+	return r
+}
+
+func contains(needle string, haystack []string) bool {
+	for _, x := range haystack {
+		if needle == x {
+			return true
+		}
+	}
+	return false
+}
+
 func root(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	baseline := ""
+	c := appengine.NewContext(r)
+	if base := r.FormValue("base"); base != "" && contains(base, allPeers(c)) {
+		baseline = "<base href=" + base + ">\n"
+	}
 	fmt.Fprint(w, `
 <head>
 <link rel="stylesheet" href="pure/pure-min.css">
 <title>STEP HW7 例文のサーバー</title>
+`+baseline+
+		`
 <style>
 th {
   background-color: #e0e0e0;
