@@ -74,7 +74,6 @@ func initPeers(c appengine.Context) map[string][]string {
 		for len(v) < len(fields) {
 			v = append(v, "F")
 		}
-		//		log.Printf("Got %s", strings.Join(v, ";"))
 		url := trailingSlashRe.ReplaceAllString(v[0], "")
 		if !appspotMatchRe.MatchString(url) {
 			continue
@@ -115,7 +114,6 @@ func contains(needle string, haystack []string) bool {
 }
 
 func selfBase(r *http.Request) string {
-	//	appengine.NewContext(r).Infof("request = %v, header=%v, url=%v", r, r.Header, r.URL)
 	base := kSelfURL
 	tryBase := func(server, port []string) {
 		if len(server) < 1 {
@@ -309,7 +307,6 @@ func RailCipher(vs string, k int, debug bool) string {
 }
 
 func recv(w http.ResponseWriter, r *http.Request) {
-	//	c := appengine.NewContext(r)
 	AddHeaders(&w)
 	debug, _ := strconv.ParseBool(r.FormValue("debug"))
 	switch r.FormValue("debug") {
@@ -393,7 +390,6 @@ func FetchUrl(url string, c appengine.Context, cf chan FetchRes) {
 		if resp.StatusCode != 200 {
 			r.Res = fmt.Sprintf("[Failure (%s): %s]", resp.Status, r.Res)
 		}
-		//		c.Infof("Success getting URL: %s => %s", url, r.Res)
 	} else {
 		c.Warningf("Error fetching %s => %s", url, err)
 		r.Res = fmt.Sprintf("[Error: %s]", err)
