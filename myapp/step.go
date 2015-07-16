@@ -198,7 +198,8 @@ form {
 </tr></thead><tbody>
 <tr><td><a href="/convert?message=DoAndroidsDreamOfElectricSheep?">/convert?message=DoAndroidsDreamOfElectricSheep?</a>
   <td class=right><form method=get action=convert><input placeholder="このinputタグの名前が「message」です" type=text name=message size=42><input type=submit value="Convert!"></form></tr>
-<tr><td><a href="/show?message=ピタゴラ暗号棒ではない">/show?message=ピタゴラ暗号棒ではない</a>
+<tr><td><a href="/show?message=ピタゴラ暗号棒ではない">/show?message=ピタゴラ暗号棒ではない</a><br>
+  <a href="/show?message=Computer Science is no more about computers than astronomy is about telescopes.">/show?message=Computer Science is no more about computers than astronomy is about telescopes.</a>
   <td class=right><form method=get action=show><input placeholder="このinputタグの名前が「message」です" type=text name=message size=42><input type=submit value="Show!"></form></tr>
 <tr><td><a href="/peers">/peers</a> (表示されるサーバーは/convertに対応しています)<br>
   <a href="/peers?endpoint=getword">/peers?endpoint=getword</a> (表示されるサーバーは/getwordを対応しているので、/madlibを作るのに使えます)
@@ -242,7 +243,6 @@ form {
 </table>
 <input type=submit value=convert>
 </form>
-
 </body>
 `)
 }
