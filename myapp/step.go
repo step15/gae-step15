@@ -43,7 +43,7 @@ func init() {
 var peerSplitRe = regexp.MustCompile(`\t`)
 var trailingSlashRe = regexp.MustCompile("/$")
 var appspotPrefixRe = regexp.MustCompile(`\.appspot.com.*`)
-var appspotMatchRe = regexp.MustCompile(`http://([^."']+)\.appspot\.com[^"']*`)
+var appspotMatchRe = regexp.MustCompile(`http://([^a-zA-Z0-9-]+)\.appspot\.com[^"']*`)
 
 type FetchRes struct {
 	Url, Res string
