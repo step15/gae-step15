@@ -43,7 +43,7 @@ func init() {
 var peerSplitRe = regexp.MustCompile(`\t`)
 var trailingSlashRe = regexp.MustCompile("/$")
 var appspotPrefixRe = regexp.MustCompile(`\.appspot.com.*`)
-var appspotMatchRe = regexp.MustCompile(`http://([^a-zA-Z0-9-.]+)\.appspot\.com[^"']*`)
+var appspotMatchRe = regexp.MustCompile(`http://([a-zA-Z0-9\-]+)\.appspot\.com[^"']*`)
 
 type FetchRes struct {
 	Url, Res string
@@ -65,10 +65,10 @@ type ShowMessage struct {
 	ShowResults []FetchRes `json:"showResults"`
 }
 
-func initPeers(c appengine.Context) map[string][]string {
-	rMap := make(map[string][]string)
+func parsePeers(str string) map[string][]string {
+	peers := make(map[string][]string)
 	fields := []string{"url", "convert", "show", "getword", "madlib", "peers"}
-	lines := strings.Split(GetPeers(c), "\n")
+	lines := strings.Split(str, "\n")
 	for li := range lines {
 		v := peerSplitRe.Split(lines[li], len(fields))
 		for len(v) < len(fields) {
@@ -81,12 +81,16 @@ func initPeers(c appengine.Context) map[string][]string {
 		for fi := 1; fi < len(fields); fi++ {
 			val, _ := strconv.ParseBool(v[fi])
 			if val {
-				rMap[fields[fi]] = append(rMap[fields[fi]], url)
+				peers[fields[fi]] = append(peers[fields[fi]], url)
 			}
 		}
 	}
-	log.Printf("Peers map: %s", rMap)
-	return rMap
+	log.Printf("Peers map: %s", peers)
+	return peers
+}
+
+func initPeers(c appengine.Context) map[string][]string {
+	return parsePeers(GetPeers(c))
 }
 
 func allPeers(c appengine.Context) []string {
